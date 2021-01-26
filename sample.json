@@ -1,13 +1,13 @@
 {
-	"hoge":"poyo",
-	"hogehoge":{
-		"poyo": 1.0,
-		"poe": true
-	},
-	"voidhoge":{
-		"kyomu":[
-			0.0,
-			1.0
-		]
-	}
+    "hoge":"poyo",
+    "hogehoge":{
+        "poyo": 1.0,
+        "poe": true
+    },
+    "voidhoge":{
+        "kyomu":[
+            0.0,
+            1.0
+        ]
+    }
 }

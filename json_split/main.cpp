@@ -19,6 +19,12 @@ int main(int argc, char const *argv[]) {
 		std::string key;
 		std::string value;
 		if (data.at(i) == '\"') {
+			int space_count = 0;
+			int tmp = i-1;
+			while (data.at(tmp) == ' ') {
+				tmp--;
+				space_count++;
+			}
 			i++;
 			while (data.at(i) != '\"') {
 				key += data.at(i);
@@ -49,6 +55,12 @@ int main(int argc, char const *argv[]) {
 					}
 				}
 				value += data.at(i);
+				if (data.at(i) == '\n') {
+					i+=space_count;
+					if (i >= data.length()) {
+						continue;
+					}
+				}
 				i++;
 			}
 			write_text_file(key, value);
