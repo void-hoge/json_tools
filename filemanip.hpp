@@ -5,9 +5,6 @@
 
 void write_text_file(const std::string filename, const std::string data) {
 	std::ofstream file(filename+".json");
-	file << '\"';
-	file << filename;
-	file << '\"';
 	file << data;
 	file.close();
 }
