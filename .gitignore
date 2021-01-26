@@ -2,3 +2,4 @@ gameparams.json
 *.out
 *.o
 /json_split/gameparams/
+P*.json
