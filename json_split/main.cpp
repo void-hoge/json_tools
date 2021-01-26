@@ -2,27 +2,15 @@
 #include <fstream>
 #include <string>
 #include <cassert>
-#include <vector>
-
-void makefile(std::string filename, std::string data) {
-	std::ofstream file(filename+".json");
-	file << '\"';
-	file << filename;
-	file << '\"';
-	file << data;
-	file.close();
-}
+#include "../filemanip.hpp"
 
 int main(int argc, char const *argv[]) {
 	assert(argc == 2);
 	std::string filename = argv[1];
-	std::ifstream ifs(filename);
-	std::istreambuf_iterator<char> it(ifs);
-	std::istreambuf_iterator<char> last;
-	std::string data(it, last);
+	std::string data;
+	read_text_file(filename, data);
 
 	// std::cout << data << '\n';
-	std::vector<std::string> hoge;
 	std::string::size_type start_pos = 0;
 	while (data.at(start_pos) != '{') {
 		start_pos++;
@@ -63,7 +51,7 @@ int main(int argc, char const *argv[]) {
 				value += data.at(i);
 				i++;
 			}
-			makefile(key, value);
+			write_text_file(key, value);
 		}
 	}
 	return 0;
