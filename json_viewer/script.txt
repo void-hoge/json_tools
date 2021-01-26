@@ -1,0 +1,2 @@
+move voidhoge
+output out.json dump

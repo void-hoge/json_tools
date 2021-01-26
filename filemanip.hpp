@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FILEMANIP_HPP_INCLUDED
+#define FILEMANIP_HPP_INCLUDED
 
 #include <fstream>
 #include <string>
@@ -16,3 +17,5 @@ void read_text_file(const std::string filename, std::string& data) {
 	data = std::string(it, last);
 	ifs.close();
 }
+
+#endif /* end of include guard: FILEMANIP_HPP_INCLUDED */
