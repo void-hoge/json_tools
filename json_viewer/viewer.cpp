@@ -93,9 +93,9 @@ bool viewer::select(const std::string option) {
 		if (tmp.pointer->is_object() == false) {
 			std::cerr << tmp.name << " is not an object." << '\n';
 		}else {
-			this->current = tmp.pointer;
-			this->brc.pointer.push_back(tmp.pointer);
+			this->brc.pointer.push_back(current);
 			this->brc.name.push_back(tmp.name);
+			this->current = tmp.pointer;
 			this->list.clear();
 		}
 	}else {
