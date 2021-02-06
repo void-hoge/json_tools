@@ -15,10 +15,10 @@ int main(int argc, char const *argv[]) {
 
 	viewer vw(data);
 	std::string command;
-	std::cerr << ">>> ";
+	std::cerr << vw.current_pos() << "> ";
 	std::getline(std::cin, command);
 	while (vw.manip(command, std::cout)) {
-		std::cerr << ">>> ";
+		std::cerr << vw.current_pos() << "> ";
 		std::getline(std::cin, command);
 	}
 	return 0;

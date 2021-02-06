@@ -45,6 +45,7 @@ public:
 		current = &data;
 	}
 	bool manip(const std::string command, std::ostream& ros);
+	std::string current_pos() const;
 };
 
 std::string remove_first_word(std::string str);

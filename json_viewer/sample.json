@@ -2,7 +2,10 @@
     "hoge":"poyo",
     "hogehoge":{
         "poyo": 1.0,
-        "poe": true
+        "poe": true,
+	"poepoe": {
+		"tsurapoyo": 114514
+	}
     },
     "voidhoge":{
         "kyomu":[

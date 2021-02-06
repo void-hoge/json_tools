@@ -55,10 +55,10 @@ std::string remove_first_word(std::string str) {
 }
 
 std::string branch::get_pwd() const{
-	std::string res = "root/";
+	std::string res;
 	for (auto& i: this->name) {
-		res += i;
 		res += "/";
+		res += i;
 	}
 	return res;
 }
@@ -129,7 +129,7 @@ bool viewer::move(const std::string option) {
 }
 
 bool viewer::back() {
-	if (this->brc.get_pwd() != "root/") {
+	if (this->brc.get_pwd() != "/") {
 		this->list.clear();
 		if (this->brc.pointer.empty() == true) {
 			this->current = &data;
@@ -195,4 +195,8 @@ bool viewer::manip(const std::string command, std::ostream& ros) {
 		std::cerr << "Error: " << "Command not found." << '\n';
 	}
 	return true;
+}
+
+std::string viewer::current_pos() const {
+	return this->brc.get_pwd()+" ";
 }
