@@ -10,23 +10,64 @@ std::string remove_space(std::string str) {
 	return str;
 }
 
-std::string get_word(std::string str, int n) {
-	// n番目(0~)の単語を返す。
+std::string get_first_word(std::string& str, std::vector<char> separators) {
+	if (str == "") {
+		return std::string("");
+	}
 	std::string res;
 	std::string::iterator it = str.begin();
-	for (int i = 0; it < str.end() && i < n; it++) {
-		if (*it == ' ') {
-			i++;
+	// 最初のseparatorを読み飛ばす。
+	while (true){
+		bool frag = false;
+		for (char a: separators) {
+			if (*it == a) {
+				frag = true;
+				break;
+			}
 		}
-	}
-	while (*it == ' '){
-		it++;
-	}
-	for (; it < str.end(); it++) {
-		if (*it == ' ') {
+		if (frag) {
+			it++;
+			if (it == str.end()) {
+				return res;
+			}
+			continue;
+		}else {
 			break;
 		}
-		res+=*it;
+	}
+	// 最初にseparatorに到達するまで読む
+	while (true) {
+		bool frag = false;
+		for (char a: separators) {
+			if (*it == a) {
+				frag = true;
+			}
+		}
+		if (frag == false) {
+			res+=*it;
+			it++;
+			if (it == str.end()) {
+				break;
+			}
+		}else {
+			break;
+		}
+	}
+	// 止まった部分以降を読む
+	std::string remain;
+	while (it != str.end()) {
+		remain+=*it;
+		it++;
+	}
+	str = remain;
+	return res;
+}
+
+std::string get_word(std::string str, int n, std::vector<char> separators) {
+	// n番目(0~)の単語を返す。
+	std::string res;
+	for (int i = 0; i <= n; i++) {
+		res = get_first_word(str, separators);
 	}
 	return res;
 }
@@ -67,7 +108,7 @@ bool viewer::show_list(const std::string option, std::ostream& ros) {
 	int count = 0;
 	this->list.clear();
 	for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
-		if (it.key().find(get_word(option, 0)) != std::string::npos) {
+		if (it.key().find(get_word(option, 0, (std::vector<char>){' '})) != std::string::npos) {
 			std::cerr << std::left << std::setw(10) << count;
 			ros << std::right << it.key() << '\n';
 			count++;
@@ -84,12 +125,12 @@ bool viewer::select(const std::string option) {
 		return false;
 	}
 	try {
-		num = std::stoi(get_word(option, 0));
+		num = std::stoi(get_word(option, 0, (std::vector<char>){' '}));
 	} catch (const std::invalid_argument& e) {
 		std::cerr << "Error: " << "invalid_argument: " << option << '\n';
 		return false;
 	}
-	if (num < this->list.size()) {
+	if (num < this->list.size() && num >= 0) {
 		name_obj tmp = list.at(num);
 		if (tmp.pointer->is_object() == false) {
 			std::cerr << tmp.name << " is not an object." << '\n';
@@ -111,25 +152,25 @@ bool viewer::move(const std::string option) {
 		this->current = &data;
 		this->brc.pointer.clear();
 		this->brc.name.clear();
-	}else if (this->current->find(get_word(option, 0)) != this->current->end()) {
-		json* tmp = &(*this->current->find(get_word(option, 0)));
+	}else if (this->current->find(get_word(option, 0, (std::vector<char>){' '})) != this->current->end()) {
+		json* tmp = &(*this->current->find(get_word(option, 0, (std::vector<char>){' '})));
 		if (tmp->is_object() == true) {
 			this->list.clear();
 			this->brc.pointer.push_back(current);
 			this->current = tmp;
-			this->brc.name.push_back(get_word(option, 0));
+			this->brc.name.push_back(get_word(option, 0, (std::vector<char>){' '}));
 		}else {
-			std::cerr << "Error: " << get_word(option, 0) << " is not an object." << '\n';
+			std::cerr << "Error: " << get_word(option, 0, (std::vector<char>){' '}) << " is not an object." << '\n';
 			return false;
 		}
 	}else {
-		std::cerr << "Error: " << get_word(option, 0) << " key not found" << '\n';
+		std::cerr << "Error: " << get_word(option, 0, (std::vector<char>){' '}) << " key not found" << '\n';
 	}
 	return true;
 }
 
 bool viewer::back() {
-	if (this->brc.get_pwd() != "/") {
+	if (this->brc.get_pwd() != "") {
 		this->list.clear();
 		if (this->brc.pointer.empty() == true) {
 			this->current = &data;
@@ -146,37 +187,48 @@ bool viewer::back() {
 }
 
 bool viewer::dump(std::string option, std::ostream& ros) {
-	if (get_word(option, 0) == "") {
-		ros << current->dump(4) << '\n';
+	if (get_word(option, 0, (std::vector<char>){' '}) == "") {
+		if (this->list.empty()) {
+			std::cerr << "Error: " << "There is no list." << '\n';
+			return false;
+		}
+		for (int i = 0; i < this->list.size(); i++) {
+			ros << "\"" << this->list[i].name << "\": ";
+			ros << this->list[i].pointer->dump(4);
+			if (i != this->list.size()-1) {
+				ros << ",";
+			}
+			ros << "\n";
+		}
 		return true;
-	}else if (current->find(get_word(option, 0)) != current->end()) {
-		ros << (*current->find(get_word(option, 0))).dump(4) << '\n';
+	}else if (current->find(get_word(option, 0, (std::vector<char>){' '})) != current->end()) {
+		ros << (*current->find(get_word(option, 0, (std::vector<char>){' '}))).dump(4) << '\n';
 	}else {
-		std::cerr << "Error: " << '\"' << get_word(option, 0) << '\"' << " key not found." << '\n';
+		std::cerr << "Error: " << '\"' << get_word(option, 0, (std::vector<char>){' '}) << '\"' << " key not found." << '\n';
 	}
 	return true;
 }
 
 bool viewer::file_output(const std::string option) {
-	std::ofstream ofs(get_word(option, 0));
+	std::ofstream ofs(get_word(option, 0, (std::vector<char>){' '}));
 	manip(remove_first_word(option), ofs);
 	ofs.close();
 	return true;
 }
 
 bool viewer::manip(const std::string command, std::ostream& ros) {
-	std::string first = get_word(command, 0);
+	std::string first = get_word(command, 0, (std::vector<char>){' '});
 	if (first == "end" || first == "\0") {
 		// 終了
 		return false;
 	}else if (first == "list") {
 		// 今の場所から見える要素を表示
-		this->show_list(get_word(command, 1), ros);
+		this->show_list(get_word(command, 1, (std::vector<char>){' '}), ros);
 	}else if (first == "select") {
 		// 直近で作ったlistから選んでそこに移動
-		this->select(get_word(command, 1));
+		this->select(get_word(command, 1, (std::vector<char>){' '}));
 	}else if (first == "move") {
-		this->move(get_word(command, 1));
+		this->move(get_word(command, 1, (std::vector<char>){' '}));
 		// 直接objectを指定して移動
 	}else if (first == "pwd") {
 		// 現在の場所を表示
@@ -186,7 +238,7 @@ bool viewer::manip(const std::string command, std::ostream& ros) {
 		this->back();
 	}else if (first == "dump") {
 		// 現在の場所からdump
-		this->dump(get_word(command, 1), ros);
+		this->dump(get_word(command, 1, (std::vector<char>){' '}), ros);
 	}else if (first == "output") {
 		// ファイルに書き出す。
 		this->file_output(remove_first_word(command));

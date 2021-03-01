@@ -50,7 +50,7 @@ public:
 
 std::string remove_first_word(std::string str);
 
-std::string get_word(std::string str, int n);
+std::string get_word(std::string str, int n, std::vector<char> separators);
 
 std::string remove_space(std::string str);
 
