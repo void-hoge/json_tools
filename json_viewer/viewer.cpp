@@ -26,55 +26,24 @@ std::string remove_space(std::string str) {
 }
 
 std::string get_first_word(std::string& str, std::vector<char> separators) {
-	if (str == "") {
-		return std::string("");
-	}
 	std::string res;
-	std::string::iterator it = str.begin();
-	// 最初のseparatorを読み飛ばす。
-	while (true){
-		bool frag = false;
-		for (char a: separators) {
-			if (*it == a) {
-				frag = true;
-				break;
-			}
-		}
-		if (frag) {
-			it++;
-			if (it == str.end()) {
-				return res;
-			}
-			continue;
-		}else {
+	std::string remained;
+	std::string::size_type i = 0;
+	for (; i < str.length(); i++) {
+		if (std::find(separators.begin(), separators.end(), (char)str.at(i)) != separators.end()) {
+			// separatorが見つかった
+			i++;
 			break;
 		}
+		res += str.at(i);
 	}
-	// 最初にseparatorに到達するまで読む
-	while (true) {
-		bool frag = false;
-		for (char a: separators) {
-			if (*it == a) {
-				frag = true;
-			}
-		}
-		if (frag == false) {
-			res+=*it;
-			it++;
-			if (it == str.end()) {
-				break;
-			}
-		}else {
-			break;
-		}
+	while (i < str.length() && std::find(separators.begin(), separators.end(), (char)str.at(i)) != separators.end()) {
+		i++;
 	}
-	// 止まった部分以降を読む
-	std::string remain;
-	while (it != str.end()) {
-		remain+=*it;
-		it++;
+	for (; i < str.length(); i++) {
+		remained += str.at(i);
 	}
-	str = remain;
+	str = remained;
 	return res;
 }
 
@@ -204,23 +173,33 @@ bool viewer::show_list(const std::string option, std::ostream& ros) {
 	return true;
 }
 
-bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separatad_option) const{
+bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separated_option) const{
 	// separated_option
 	// 0:hoge/poyo
 	// 1:=
 	// 2:100, "hoge" ext...
-	auto directories = separate_words(separatad_option[0], (std::vector<char>){'/'});
+	auto directories = separate_words(separated_option[0], (std::vector<char>){'/', '[', ']'});
 	// directories
 	// 0:hoge
 	// 1:poyo
 	for (int i = 0; i < directories.size(); i++) {
-		if (pointer->contains(directories[i]) == true) {
-			pointer= &((*pointer)[directories[i]]);
+		if (pointer->is_array() == true) {
+			try {
+				int array_num = std::stoi(directories[i]);
+				pointer = &(*pointer).at(array_num);
+			}catch (std::exception& e) {
+				// 配列だが、数字として認識されていない。
+				return false;
+			}
 		}else {
-			return false;
+			if (pointer->contains(directories[i]) == true) {
+				pointer = &((*pointer)[directories[i]]);
+			}else {
+				return false;
+			}
 		}
 	}
-	if (separatad_option.size() == 1) {
+	if (separated_option.size() == 1) {
 		// 要素の存在さえ分かればいい場合
 		return true;
 	}else if (pointer->is_object() == true) {
@@ -228,18 +207,18 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separatad_
 		return false;
 	}
 	// separated_option[2]に対し、型を調べて一致を検査する
-	if (separatad_option[2] == "*") {
+	if (separated_option[2] == "*") {
 		// ワイルドカード
 		return true;
 	}
-	if (separatad_option[2] == "null") {
+	if (separated_option[2] == "null") {
 		if (pointer->is_null()) {
 			return true;
 		}else {
 			return false;
 		}
 	}
-	if (separatad_option[2] == "true") {
+	if (separated_option[2] == "true") {
 		if (pointer->is_boolean()) {
 			if (*pointer == true) {
 				return true;
@@ -247,7 +226,7 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separatad_
 		}
 		return false;
 	}
-	if (separatad_option[2] == "false") {
+	if (separated_option[2] == "false") {
 		if (pointer->is_boolean() == true) {
 			if (*pointer == false) {
 				return true;
@@ -256,7 +235,7 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separatad_
 		return false;
 	}
 	{
-		std::string tmp = is_string(separatad_option[2]);
+		std::string tmp = is_string(separated_option[2]);
 		if (tmp != "") {
 			if (pointer->is_string()) {
 				if (*pointer == tmp) {
@@ -270,8 +249,8 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separatad_
 		if (pointer->is_number_float()) {
 			try {
 				// nlohmann jsonでは実数は暗黙にdoubleに変換される。
-				double tmp = stod(separatad_option[2]);
-				return compare((double)(*pointer), tmp, separatad_option[1]);
+				double tmp = stod(separated_option[2]);
+				return compare((double)(*pointer), tmp, separated_option[1]);
 			} catch (std::exception& e){
 				// do nothing
 			}
@@ -279,8 +258,8 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separatad_
 		}
 		if (pointer->is_number_integer()) {
 			try {
-				long long tmp = stoll(separatad_option[2]);
-				return compare((long long)(*pointer), tmp, separatad_option[1]);
+				long long tmp = stoll(separated_option[2]);
+				return compare((long long)(*pointer), tmp, separated_option[1]);
 			} catch (std::exception& e) {
 				// do nothing
 			}

@@ -1,53 +1,24 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
+#include <algorithm>
 
 std::string get_first_word(std::string& str, std::vector<char> separators) {
 	std::string res;
-	std::string::iterator it = str.begin();
-	// 最初のseparatorを読み飛ばす。
-	while (true){
-		bool frag = false;
-		for (char a: separators) {
-			if (*it == a) {
-				frag = true;
-				break;
-			}
-		}
-		if (frag) {
-			it++;
-			if (it == str.end()) {
-				return res;
-			}
-			continue;
-		}else {
+	std::string remained;
+	std::string::size_type i = 0;
+	for (; i < str.length(); i++) {
+		if (std::find(separators.begin(), separators.end(), (char)str.at(i)) != separators.end()) {
+			// separatorが見つかった
 			break;
 		}
+		res += str.at(i);
 	}
-	while (true) {
-		bool frag = false;
-		for (char a: separators) {
-			if (*it == a) {
-				frag = true;
-			}
-		}
-		if (frag == false) {
-			res+=*it;
-			it++;
-			if (it == str.end()) {
-				break;
-			}
-		}else {
-			break;
-		}
+	i++;
+	for (; i < str.length(); i++) {
+		remained += str.at(i);
 	}
-	std::string remain;
-	while (it != str.end()) {
-		remain+=*it;
-		it++;
-	}
-	str = remain;
+	str = remained;
 	return res;
 }
 
@@ -87,7 +58,11 @@ std::string add_space (std::string str, std::vector<char> separators) {
 }
 
 int main(int argc, char const *argv[]) {
-	std::cout << "A_Artillery/sigmaCount<=2.1" << '\n';
-	std::cout << add_space("A_Artillery/sigmaCount<=2.1", (std::vector<char>){'=', '<', '>'}) << '\n';
+	try {
+		double a = std::stod("263");
+		std::cout << a << '\n';
+	}catch (std::exception& e) {
+		std::cout << e.what() << '\n';
+	}
 	return 0;
 }
