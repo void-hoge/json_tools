@@ -60,12 +60,34 @@ std::string get_word(std::string str, int n, std::vector<char> separators) {
 	return res;
 }
 
-int main(int argc, char const *argv[]) {
-	std::string a;
-	std::getline(std::cin, a, '\n');
-	for (int i = 0; i < 4; i++) {
-		// std::cout << get_first_word(a, (std::vector<char>){' ', '='}) << '\n';
-		std::cout << get_word(a, i, (std::vector<char>){' ', '='}) << '\n';
+std::vector<std::string> separate_words(std::string str, std::vector<char> separators) {
+	std::vector<std::string> res;
+	while(str != "") {
+		res.push_back(get_first_word(str, separators));
 	}
+	return res;
+}
+
+std::string add_space (std::string str, std::vector<char> separators) {
+	std::string res;
+	for (std::string::size_type i = 0; i < str.length(); i++) {
+		if (std::find(separators.begin(), separators.end(), str.at(i)) != separators.end()) {
+			res+=' ';
+			for (; i < str.length(); i++) {
+				if (std::find(separators.begin(), separators.end(), str.at(i)) == separators.end()) {
+					break;
+				}
+				res+=str.at(i);
+			}
+			res+=' ';
+		}
+		res+=str.at(i);
+	}
+	return res;
+}
+
+int main(int argc, char const *argv[]) {
+	std::cout << "A_Artillery/sigmaCount<=2.1" << '\n';
+	std::cout << add_space("A_Artillery/sigmaCount<=2.1", (std::vector<char>){'=', '<', '>'}) << '\n';
 	return 0;
 }

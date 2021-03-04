@@ -1,6 +1,21 @@
 #include "viewer.hpp"
 #include <fstream>
 
+std::string add_tab(std::string str, int num_of_space) {
+	std::string buf;
+	for (std::string::iterator it = str.begin(); it < str.end(); it++) {
+		if (*it == '\n') {
+			buf+=*it;
+			for (int i = 0; i < num_of_space; i++) {
+				buf+=' ';
+			}
+		}else {
+			buf+=*it;
+		}
+	}
+	return buf;
+}
+
 std::string remove_space(std::string str) {
 	for (std::string::iterator it = str.begin(); it < str.end(); it++) {
 		if (*it == ' ') {
@@ -95,6 +110,77 @@ std::string remove_first_word(std::string str) {
 	return res;
 }
 
+std::vector<std::string> separate_words(std::string str, std::vector<char> separators) {
+	std::vector<std::string> res;
+	while(str != "") {
+		res.push_back(get_first_word(str, separators));
+	}
+	return res;
+}
+
+std::string add_space (std::string str, std::vector<char> separators) {
+	std::string res;
+	for (std::string::size_type i = 0; i < str.length(); i++) {
+		if (std::find(separators.begin(), separators.end(), str.at(i)) != separators.end()) {
+			res+=' ';
+			for (; i < str.length(); i++) {
+				if (std::find(separators.begin(), separators.end(), str.at(i)) == separators.end()) {
+					break;
+				}
+				res+=str.at(i);
+			}
+			res+=' ';
+		}
+		res+=str.at(i);
+	}
+	return res;
+}
+
+std::string is_string (std::string str) {
+	if (*(str.begin()) == '\"'&& *(str.end()-1) =='\"') {
+		str.pop_back();
+		str.erase(0, 1);
+		return str;
+	}else {
+		return "";
+	}
+}
+
+template<typename T>
+bool compare (T a, T b, std::string op) {
+	if (op == "=") {
+		if (a == b) {
+			return true;
+		}
+		return false;
+	}
+	if (op == "<") {
+		if (a < b) {
+			return true;
+		}
+		return false;
+	}
+	if (op == ">") {
+		if (a > b) {
+			return true;
+		}
+		return false;
+	}
+	if (op == "<=") {
+		if (a <= b) {
+			return true;
+		}
+		return false;
+	}
+	if (op == ">=") {
+		if (a >= b) {
+			return true;
+		}
+		return false;
+	}
+	return false;
+}
+
 std::string branch::get_pwd() const{
 	std::string res;
 	for (auto& i: this->name) {
@@ -110,7 +196,127 @@ bool viewer::show_list(const std::string option, std::ostream& ros) {
 	for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
 		if (it.key().find(get_word(option, 0, (std::vector<char>){' '})) != std::string::npos) {
 			std::cerr << std::left << std::setw(10) << count;
-			ros << std::right << it.key() << '\n';
+			ros << it.key() << '\n';
+			count++;
+			this->list.push_back(name_obj(it.key(), &(*it)));
+		}
+	}
+	return true;
+}
+
+bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separatad_option) const{
+	// separated_option
+	// 0:hoge/poyo
+	// 1:=
+	// 2:100, "hoge" ext...
+	auto directories = separate_words(separatad_option[0], (std::vector<char>){'/'});
+	// directories
+	// 0:hoge
+	// 1:poyo
+	for (int i = 0; i < directories.size(); i++) {
+		if (pointer->contains(directories[i]) == true) {
+			pointer= &((*pointer)[directories[i]]);
+		}else {
+			return false;
+		}
+	}
+	if (separatad_option.size() == 1) {
+		// 要素の存在さえ分かればいい場合
+		return true;
+	}else if (pointer->is_object() == true) {
+		// そうでない場合、オブジェクトではなく値である必要がある
+		return false;
+	}
+	// separated_option[2]に対し、型を調べて一致を検査する
+	if (separatad_option[2] == "*") {
+		// ワイルドカード
+		return true;
+	}
+	if (separatad_option[2] == "null") {
+		if (pointer->is_null()) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	if (separatad_option[2] == "true") {
+		if (pointer->is_boolean()) {
+			if (*pointer == true) {
+				return true;
+			}
+		}
+		return false;
+	}
+	if (separatad_option[2] == "false") {
+		if (pointer->is_boolean() == true) {
+			if (*pointer == false) {
+				return true;
+			}
+		}
+		return false;
+	}
+	{
+		std::string tmp = is_string(separatad_option[2]);
+		if (tmp != "") {
+			if (pointer->is_string()) {
+				if (*pointer == tmp) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+	if (pointer->is_number()) {
+		if (pointer->is_number_float()) {
+			try {
+				// nlohmann jsonでは実数は暗黙にdoubleに変換される。
+				double tmp = stod(separatad_option[2]);
+				return compare((double)(*pointer), tmp, separatad_option[1]);
+			} catch (std::exception& e){
+				// do nothing
+			}
+			return false;
+		}
+		if (pointer->is_number_integer()) {
+			try {
+				long long tmp = stoll(separatad_option[2]);
+				return compare((long long)(*pointer), tmp, separatad_option[1]);
+			} catch (std::exception& e) {
+				// do nothing
+			}
+			return false;
+		}
+	}
+	return true;
+}
+
+bool viewer::find(std::string option, std::ostream& ros) {
+	this->list.clear();
+	std::cerr << option << '\n';
+	// option "hoge/poyo=foobar"
+	option = add_space(option, (std::vector<char>){'=', '<', '>'});
+	// option "hoge/poyo = foobar"
+	auto separated_option = separate_words(option, (std::vector<char>){' '});
+	// separated_option
+	// 0:"hoge/poyo"
+	// 1:"="
+	// 2:"foobar"
+	if (separated_option.size() == 0 ||separated_option.size() == 2 || separated_option.size() >= 4) {
+		return false;
+	}
+	if (separated_option.size() == 3
+	&& separated_option[1] != "="
+	&& separated_option[1] != "<"
+	&& separated_option[1] != ">"
+	&& separated_option[1] != "<="
+	&& separated_option[1] != ">=") {
+		return false;
+	}
+
+	int count = 0;
+	for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
+		if (this->is_fulfill(&(*it), separated_option) == true) {
+			std::cerr << std::left << std::setw(10) << count << it.key() << '\n';
 			count++;
 			this->list.push_back(name_obj(it.key(), &(*it)));
 		}
@@ -192,14 +398,15 @@ bool viewer::dump(std::string option, std::ostream& ros) {
 			std::cerr << "Error: " << "There is no list." << '\n';
 			return false;
 		}
+		ros << "{";
 		for (int i = 0; i < this->list.size(); i++) {
-			ros << "\"" << this->list[i].name << "\": ";
-			ros << this->list[i].pointer->dump(4);
+			ros << "\n    \"" << this->list[i].name << "\": ";
+			ros << add_tab((std::string)(this->list[i].pointer->dump(4)), 4);
 			if (i != this->list.size()-1) {
 				ros << ",";
 			}
-			ros << "\n";
 		}
+		ros << "\n}\n";
 		return true;
 	}else if (current->find(get_word(option, 0, (std::vector<char>){' '})) != current->end()) {
 		ros << (*current->find(get_word(option, 0, (std::vector<char>){' '}))).dump(4) << '\n';
@@ -218,27 +425,30 @@ bool viewer::file_output(const std::string option) {
 
 bool viewer::manip(const std::string command, std::ostream& ros) {
 	std::string first = get_word(command, 0, (std::vector<char>){' '});
+	std::string option = remove_first_word(command);
 	if (first == "end" || first == "\0") {
 		// 終了
 		return false;
 	}else if (first == "list") {
 		// 今の場所から見える要素を表示
-		this->show_list(get_word(command, 1, (std::vector<char>){' '}), ros);
+		this->show_list(option, ros);
+	}else if(first == "find") {
+		this->find(option, ros);
 	}else if (first == "select") {
 		// 直近で作ったlistから選んでそこに移動
-		this->select(get_word(command, 1, (std::vector<char>){' '}));
+		this->select(option);
 	}else if (first == "move") {
-		this->move(get_word(command, 1, (std::vector<char>){' '}));
 		// 直接objectを指定して移動
+		this->move(option);
 	}else if (first == "pwd") {
 		// 現在の場所を表示
-		std::cout << this->brc.get_pwd() << '\n';
+		ros << this->brc.get_pwd() << '\n';
 	}else if (first == "back") {
 		// 一つ前に戻る
 		this->back();
 	}else if (first == "dump") {
 		// 現在の場所からdump
-		this->dump(get_word(command, 1, (std::vector<char>){' '}), ros);
+		this->dump(option, ros);
 	}else if (first == "output") {
 		// ファイルに書き出す。
 		this->file_output(remove_first_word(command));

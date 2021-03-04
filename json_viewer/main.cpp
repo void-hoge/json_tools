@@ -10,7 +10,7 @@ int main(int argc, char const *argv[]) {
 	std::string alldata;
 	std::cerr << "reading " << filename << "..." << '\n';
 	read_text_file(filename, alldata);
-	std::cerr << "constructing data..." << '\n';
+	std::cerr << "constructing the data..." << '\n';
 	json data = json::parse(alldata);
 
 	viewer vw(data);

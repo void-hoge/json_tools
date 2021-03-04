@@ -34,6 +34,8 @@ private:
 	branch brc;
 	std::vector<name_obj> list;
 	bool show_list(const std::string option, std::ostream& ros);
+	bool is_fulfill(json* pointer, const std::vector<std::string> separatad_option) const;
+	bool find(std::string option, std::ostream& ros);
 	bool select(const std::string option);
 	bool move(const std::string option);
 	bool back();
@@ -47,11 +49,5 @@ public:
 	bool manip(const std::string command, std::ostream& ros);
 	std::string current_pos() const;
 };
-
-std::string remove_first_word(std::string str);
-
-std::string get_word(std::string str, int n, std::vector<char> separators);
-
-std::string remove_space(std::string str);
 
 #endif /* end of include guard: VIEWER_HPP_INCLUDED */

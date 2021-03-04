@@ -1,9 +1,14 @@
 CC = g++
 PROG = jsonviewer
-OPTIM = -O3 -mtune=native -march=native
+OPTIM = -O2 -mtune=native -march=native
 # OPTIM = -O3
 STD = -std=c++17
-SRC = main.cpp viewer.cpp
 
-$(PROG).out : $(SRC)
-	$(CC) $(OPTIM) $(SRC) $(STD) -o $(PROG).out
+$(PROG).out : main.cpp.o viewer.cpp.o
+	$(CC) $(OPTIM) $(STD) main.cpp.o viewer.cpp.o -o $(PROG).out
+
+main.cpp.o: main.cpp
+	$(CC) $(OPTIM) $(STD) main.cpp -c -o main.cpp.o
+
+viewer.cpp.o: viewer.cpp
+	$(CC) $(OPTIM) $(STD) viewer.cpp -c -o viewer.cpp.o
