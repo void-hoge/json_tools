@@ -115,6 +115,30 @@ std::string is_string (std::string str) {
 	}
 }
 
+std::vector<std::vector<std::string>> separate_conditions(std::vector<std::string> str) {
+	if ((str.size() % 4) != 3) {
+		return std::vector<std::vector<std::string>>();
+	}
+	std::vector<std::vector<std::string>> res;
+	res.resize((str.size()/4)+1);
+	for (size_t i = 0; i < res.size(); i++) {
+		for (size_t j = 0; j < 3; j++) {
+			res[i].push_back(str[i*4+j]);
+		}
+	}
+	return res;
+}
+
+std::vector<std::string> get_logic_arrary(std::vector<std::string> str) {
+	std::vector<std::string> res;
+	for (int i = 0; i < str.size(); i++) {
+		if ((i%4) == 3) {
+			res.push_back(str[i]);
+		}
+	}
+	return res;
+}
+
 template<typename T>
 bool compare (T a, T b, std::string op) {
 	if (op == "=") {
@@ -273,32 +297,49 @@ bool viewer::find(std::string option, std::ostream& ros) {
 	this->list.clear();
 	std::cerr << option << '\n';
 	// option "hoge/poyo=foobar"
-	option = add_space(option, (std::vector<char>){'=', '<', '>'});
+	option = add_space(option, (std::vector<char>){'=', '<', '>', '&', '|', '^'});
 	// option "hoge/poyo = foobar"
 	auto separated_option = separate_words(option, (std::vector<char>){' '});
 	// separated_option
 	// 0:"hoge/poyo"
 	// 1:"="
 	// 2:"foobar"
-	if (separated_option.size() == 0 ||separated_option.size() == 2 || separated_option.size() >= 4) {
-		return false;
-	}
-	if (separated_option.size() == 3
-	&& separated_option[1] != "="
-	&& separated_option[1] != "<"
-	&& separated_option[1] != ">"
-	&& separated_option[1] != "<="
-	&& separated_option[1] != ">=") {
-		return false;
-	}
+	// 3:"&"
+	// 4:"huga/hugo"
+	// 5:">"
+	// 6:"114514"
+	auto conditions = separate_conditions(separated_option);
+	auto logic_array = get_logic_arrary(separated_option);
 
+	std::vector<bool> result_array;
 	int count = 0;
 	for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
-		if (this->is_fulfill(&(*it), separated_option) == true) {
-			std::cerr << std::left << std::setw(10) << count << it.key() << '\n';
+		for (size_t i = 0; i < conditions.size(); i++) {
+			result_array.push_back(this->is_fulfill(&(*it), conditions[i]));
+		}
+		bool result = result_array[0];
+		for (size_t i = 0; i < logic_array.size(); i++) {
+			if (logic_array[i] == "&") {
+				result&=result_array[i+1];
+			}else if (logic_array[i] == "|") {
+				result|=result_array[i+1];
+			}else if (logic_array[i] == "^") {
+				result^=result_array[i+1];
+			}
+		}
+		if (result) {
+			std::cerr << std::left << std::setw(10) << count;
+			ros << it.key() << '\n';
 			count++;
 			this->list.push_back(name_obj(it.key(), &(*it)));
 		}
+		result_array.clear();
+		// if (this->is_fulfill(&(*it), separated_option) == true) {
+		// 	std::cerr << std::left << std::setw(10) << count;
+		// 	ros << it.key() << '\n';
+		// 	count++;
+		// 	this->list.push_back(name_obj(it.key(), &(*it)));
+		// }
 	}
 	return true;
 }

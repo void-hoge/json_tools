@@ -57,12 +57,23 @@ std::string add_space (std::string str, std::vector<char> separators) {
 	return res;
 }
 
-int main(int argc, char const *argv[]) {
-	try {
-		double a = std::stod("263");
-		std::cout << a << '\n';
-	}catch (std::exception& e) {
-		std::cout << e.what() << '\n';
+std::vector<std::vector<std::string>> separate_conditions(std::vector<std::string> str) {
+	if (str.size() % 4 != 2) {
+		return std::vector<std::vector<std::string>>();
 	}
+	std::vector<std::vector<std::string>> res((str.size()/4)+1);
+	std::vector<std::string> tmp;
+	for (size_t i = 0; i < str.size(); i++) {
+		tmp.push_back(str.at(i));
+		if (i%4 == 3) {
+			res.at(i/4).push_back(tmp);
+			tmp.clear();
+		}
+	}
+	return res;
+}
+
+int main(int argc, char const *argv[]) {
+
 	return 0;
 }
