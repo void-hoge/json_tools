@@ -131,7 +131,7 @@ std::vector<std::vector<std::string>> separate_conditions(std::vector<std::strin
 
 std::vector<std::string> get_logic_arrary(std::vector<std::string> str) {
 	std::vector<std::string> res;
-	for (int i = 0; i < str.size(); i++) {
+	for (size_t i = 0; i < str.size(); i++) {
 		if ((i%4) == 3) {
 			res.push_back(str[i]);
 		}
@@ -206,7 +206,7 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separated_
 	// directories
 	// 0:hoge
 	// 1:poyo
-	for (int i = 0; i < directories.size(); i++) {
+	for (size_t i = 0; i < directories.size(); i++) {
 		if (pointer->is_array() == true) {
 			try {
 				int array_num = std::stoi(directories[i]);
@@ -345,7 +345,7 @@ bool viewer::find(std::string option, std::ostream& ros) {
 }
 
 bool viewer::select(const std::string option) {
-	int num;
+	size_t num;
 	if (this->list.empty() == true) {
 		std::cerr << "Error: " << "There is no list." << '\n';
 		return false;
@@ -419,7 +419,7 @@ bool viewer::dump(std::string option, std::ostream& ros) {
 			return false;
 		}
 		ros << "{";
-		for (int i = 0; i < this->list.size(); i++) {
+		for (size_t i = 0; i < this->list.size(); i++) {
 			ros << "\n    \"" << this->list[i].name << "\": ";
 			ros << add_tab((std::string)(this->list[i].pointer->dump(4)), 4);
 			if (i != this->list.size()-1) {

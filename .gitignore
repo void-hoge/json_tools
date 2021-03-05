@@ -2,3 +2,4 @@
 *.out
 *.o
 /json_split/gameparams/
+.DS_Store
