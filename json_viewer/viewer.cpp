@@ -189,12 +189,31 @@ bool viewer::show_list(const std::string option, std::ostream& ros) {
 	for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
 		if (it.key().find(get_word(option, 0, (std::vector<char>){' '})) != std::string::npos) {
 			std::cerr << std::left << std::setw(10) << count;
-			ros << it.key() << '\n';
+			ros << std::left << std::setw(40) << it.key();
+			std::cerr << get_datatype(&(*it));
+			ros << '\n';
 			count++;
 			this->list.push_back(name_obj(it.key(), &(*it)));
 		}
 	}
 	return true;
+}
+
+std::string viewer::get_datatype(json* ptr) const {
+	if (ptr->is_array()) {
+		return "array";
+	}else if (ptr->is_boolean()) {
+		return "boolean";
+	}else if (ptr->is_null()) {
+		return "null";
+	}else if (ptr->is_number()) {
+		return  "number";
+	}else if (ptr->is_object()) {
+		return "object";
+	}else if (ptr->is_string()) {
+		return "string";
+	}
+	return "";
 }
 
 bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separated_option) const{
@@ -329,7 +348,9 @@ bool viewer::find(std::string option, std::ostream& ros) {
 		}
 		if (result) {
 			std::cerr << std::left << std::setw(10) << count;
-			ros << it.key() << '\n';
+			ros << std::left << std::setw(40) << it.key();
+			std::cerr << get_datatype(&(*it));
+			ros << '\n';
 			count++;
 			this->list.push_back(name_obj(it.key(), &(*it)));
 		}

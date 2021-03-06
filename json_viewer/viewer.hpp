@@ -35,6 +35,7 @@ private:
 	std::vector<name_obj> list;
 	bool show_list(const std::string option, std::ostream& ros);
 	bool is_fulfill(json* pointer, const std::vector<std::string> separatad_option) const;
+	std::string get_datatype(json* ptr) const;
 	bool find(std::string option, std::ostream& ros);
 	bool select(const std::string option);
 	bool move(const std::string option);
