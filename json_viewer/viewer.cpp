@@ -171,6 +171,12 @@ bool compare (T a, T b, std::string op) {
 		}
 		return false;
 	}
+	if (op == "!=") {
+		if (a != b) {
+			return true;
+		}
+		return false;
+	}
 	return false;
 }
 
@@ -316,7 +322,7 @@ bool viewer::find(std::string option, std::ostream& ros) {
 	this->list.clear();
 	std::cerr << option << '\n';
 	// option "hoge/poyo=foobar"
-	option = add_space(option, (std::vector<char>){'=', '<', '>', '&', '|', '^'});
+	option = add_space(option, (std::vector<char>){'=', '<', '>', '&', '|', '^', '!'});
 	// option "hoge/poyo = foobar"
 	auto separated_option = separate_words(option, (std::vector<char>){' '});
 	// separated_option
