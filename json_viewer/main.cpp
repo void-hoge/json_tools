@@ -5,12 +5,14 @@
 using json = nlohmann::json;
 
 int main(int argc, char const *argv[]) {
-	assert(argc == 2);
+	if (argc != 2) {
+		throw std::runtime_error("Error: No input JSON file.");
+	}
 	std::string filename = argv[1];
 	std::string alldata;
-	std::cerr << "reading " << filename << "..." << '\n';
+	std::cerr << "Reading " << filename << "..." << '\n';
 	read_text_file(filename, alldata);
-	std::cerr << "constructing the data..." << '\n';
+	std::cerr << "Constructing the data..." << '\n';
 	json data = json::parse(alldata);
 
 	viewer vw(data);

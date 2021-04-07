@@ -386,7 +386,7 @@ bool viewer::select(const std::string option) {
 	if (num < this->list.size() && num >= 0) {
 		name_obj tmp = list.at(num);
 		if (tmp.pointer->is_object() == false) {
-			std::cerr << tmp.name << " is not an object." << '\n';
+			std::cerr << "Error: " << tmp.name << " is not an object." << '\n';
 		}else {
 			this->brc.pointer.push_back(current);
 			this->brc.name.push_back(tmp.name);
