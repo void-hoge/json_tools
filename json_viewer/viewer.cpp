@@ -238,6 +238,7 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separated_
 				pointer = &(*pointer).at(array_num);
 			}catch (std::exception& e) {
 				// 配列だが、数字として認識されていない。
+				std::cerr << e.what() << '\n';
 				return false;
 			}
 		}else {
