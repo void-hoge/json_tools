@@ -192,14 +192,25 @@ std::string branch::get_pwd() const{
 bool viewer::show_list(const std::string option, std::ostream& ros) {
 	int count = 0;
 	this->list.clear();
-	for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
-		if (it.key().find(get_word(option, 0, (std::vector<char>){' '})) != std::string::npos) {
+	if (this->current->is_array()) {
+		std::cerr << "You are in an array." << '\n';
+		for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
 			std::cerr << std::left << std::setw(10) << count;
-			ros << std::left << std::setw(40) << it.key();
 			std::cerr << " " << get_datatype(&(*it));
 			ros << '\n';
 			count++;
-			this->list.push_back(name_obj(it.key(), &(*it)));
+			this->list.push_back(name_obj("", &(*it)));
+		}
+	}else {
+		for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
+			if (it.key().find(get_word(option, 0, (std::vector<char>){' '})) != std::string::npos) {
+				std::cerr << std::left << std::setw(10) << count;
+				ros << std::left << std::setw(40) << it.key();
+				std::cerr << " " << get_datatype(&(*it));
+				ros << '\n';
+				count++;
+				this->list.push_back(name_obj(it.key(), &(*it)));
+			}
 		}
 	}
 	return true;
@@ -321,6 +332,9 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separated_
 
 bool viewer::find(std::string option, std::ostream& ros) {
 	this->list.clear();
+	if (this->current->is_array()) {
+		std::cerr << "You are in an array." << '\n';
+	}
 	std::cerr << option << '\n';
 	// option "hoge/poyo=foobar"
 	option = add_space(option, (std::vector<char>){'=', '<', '>', '&', '|', '^', '!'});
@@ -354,12 +368,20 @@ bool viewer::find(std::string option, std::ostream& ros) {
 			}
 		}
 		if (result) {
-			std::cerr << std::left << std::setw(10) << count;
-			ros << std::left << std::setw(40) << it.key();
-			std::cerr << " " << get_datatype(&(*it));
-			ros << '\n';
-			count++;
-			this->list.push_back(name_obj(it.key(), &(*it)));
+			if (this->current->is_array()) {
+				std::cerr << std::left << std::setw(10) << count;
+				std::cerr << " " << get_datatype(&(*it));
+				ros << '\n';
+				count++;
+				this->list.push_back(name_obj("", &(*it)));
+			}else {
+				std::cerr << std::left << std::setw(10) << count;
+				ros << std::left << std::setw(40) << it.key();
+				std::cerr << " " << get_datatype(&(*it));
+				ros << '\n';
+				count++;
+				this->list.push_back(name_obj(it.key(), &(*it)));
+			}
 		}
 		result_array.clear();
 		// if (this->is_fulfill(&(*it), separated_option) == true) {
@@ -386,8 +408,8 @@ bool viewer::select(const std::string option) {
 	}
 	if (num < this->list.size() && num >= 0) {
 		name_obj tmp = list.at(num);
-		if (tmp.pointer->is_object() == false) {
-			std::cerr << "Error: " << tmp.name << " is not an object." << '\n';
+		if (tmp.pointer->is_object() == false && tmp.pointer->is_array() == false) {
+			std::cerr << "Error: " << tmp.name << " is not an object or array." << '\n';
 		}else {
 			this->brc.pointer.push_back(current);
 			this->brc.name.push_back(tmp.name);
@@ -408,13 +430,13 @@ bool viewer::move(const std::string option) {
 		this->brc.name.clear();
 	}else if (this->current->find(get_word(option, 0, (std::vector<char>){' '})) != this->current->end()) {
 		json* tmp = &(*this->current->find(get_word(option, 0, (std::vector<char>){' '})));
-		if (tmp->is_object() == true) {
+		if (tmp->is_object() == true || tmp->is_array() == true) {
 			this->list.clear();
 			this->brc.pointer.push_back(current);
 			this->current = tmp;
 			this->brc.name.push_back(get_word(option, 0, (std::vector<char>){' '}));
 		}else {
-			std::cerr << "Error: " << get_word(option, 0, (std::vector<char>){' '}) << " is not an object." << '\n';
+			std::cerr << "Error: " << get_word(option, 0, (std::vector<char>){' '}) << " is not an object or array." << '\n';
 			return false;
 		}
 	}else {

@@ -1,4 +1,4 @@
-*gameparams.json
+*gameparams*.json
 *.out
 *.o
 /json_split/gameparams/
