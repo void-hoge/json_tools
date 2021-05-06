@@ -299,9 +299,7 @@ bool viewer::is_fulfill(json* pointer, const std::vector<std::string> separated_
 		std::string tmp = is_string(separated_option[2]);
 		if (tmp != "") {
 			if (pointer->is_string()) {
-				if (*pointer == tmp) {
-					return true;
-				}
+				return compare((std::string)(*pointer), tmp, separated_option[1]);
 			}
 			return false;
 		}
