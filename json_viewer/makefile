@@ -1,4 +1,4 @@
-CC = g++-10
+CC = g++-11
 PROG = jsonviewer
 FRAG = -Wall
 OPTIM = -O2 -mtune=native -march=native
@@ -6,8 +6,8 @@ OPTIM = -O2 -mtune=native -march=native
 STD = -std=c++11
 INCLUDE = -I/usr/local/Cellar/nlohmann-json/3.9.1_1/include
 
-$(PROG).out : main.cpp.o viewer.cpp.o
-	$(CC) $(FRAG) $(INCLUDE) $(OPTIM) $(STD) main.cpp.o viewer.cpp.o -o $(PROG).out
+$(PROG) : main.cpp.o viewer.cpp.o
+	$(CC) $(FRAG) $(INCLUDE) $(OPTIM) $(STD) main.cpp.o viewer.cpp.o -o $(PROG)
 
 main.cpp.o: main.cpp
 	$(CC) $(FRAG) $(INCLUDE) $(OPTIM) $(STD) main.cpp -c -o main.cpp.o

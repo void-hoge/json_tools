@@ -204,10 +204,8 @@ bool viewer::show_list(const std::string option, std::ostream& ros) {
 	}else {
 		for (json::iterator it = this->current->begin(); it != this->current->end(); it++) {
 			if (it.key().find(get_word(option, 0, (std::vector<char>){' '})) != std::string::npos) {
-				std::cerr << std::left << std::setw(10) << count;
-				ros << std::left << std::setw(40) << it.key();
-				std::cerr << " " << get_datatype(&(*it));
-				ros << '\n';
+				std::cerr << std::left << std::setw(10) << count << std::left << std::setw(10) << get_datatype(&(*it));
+				ros << it.key() << '\n';
 				count++;
 				this->list.push_back(name_obj(it.key(), &(*it)));
 			}
@@ -374,9 +372,8 @@ bool viewer::find(std::string option, std::ostream& ros) {
 				this->list.push_back(name_obj("", &(*it)));
 			}else {
 				std::cerr << std::left << std::setw(10) << count;
-				ros << std::left << std::setw(40) << it.key();
-				std::cerr << " " << get_datatype(&(*it));
-				ros << '\n';
+				std::cerr << std::left << std::setw(10) << get_datatype(&(*it));
+				ros << it.key() << '\n';
 				count++;
 				this->list.push_back(name_obj(it.key(), &(*it)));
 			}
